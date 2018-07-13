@@ -1,0 +1,17 @@
+8
+./Textures/Basis/Road01.png
+1
+./Textures/Basis/Road02.png
+1
+./Textures/Basis/Road03.png
+1
+./Textures/Basis/Wall01.png
+0
+./Textures/Basis/Wall02.png
+0
+./Textures/Basis/Wall03.png
+0
+./Textures/Basis/Door01.png
+1
+./Textures/Characters/Test.png
+1
