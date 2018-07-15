@@ -1,17 +1,78 @@
-8
 ./Textures/Basis/Road01.png
-1
+1 1
 ./Textures/Basis/Road02.png
-1
+2 1
 ./Textures/Basis/Road03.png
-1
+3 1
 ./Textures/Basis/Wall01.png
-0
+4 0
 ./Textures/Basis/Wall02.png
-0
+5 0
 ./Textures/Basis/Wall03.png
-0
+6 0
 ./Textures/Basis/Door01.png
-1
-./Textures/Characters/Test.png
-1
+7 1
+<36,1,1>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1031 1
+<36,1,2>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1032 1
+<36,1,3>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1033 1
+<36,1,4>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1034 1
+<36,2,1>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1021 1
+<36,2,2>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1022 1
+<36,2,3>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1023 1
+<36,2,4>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1024 1
+<36,3,1>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1041 1
+<36,3,2>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1042 1
+<36,3,3>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1043 1
+<36,3,4>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1044 1
+<36,4,1>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1011 1
+<36,4,2>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1012 1
+<36,4,3>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1013 1
+<36,4,4>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1014 1
+<36,5,1>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1061 1
+<36,5,2>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1062 1
+<36,5,3>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1063 1
+<36,5,4>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1064 1
+<36,6,1>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1071 1
+<36,6,2>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1072 1
+<36,6,3>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1073 1
+<36,6,4>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1074 1
+<36,7,1>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1051 1
+<36,7,2>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1052 1
+<36,7,3>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1053 1
+<36,7,4>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1054 1
+<36,8,1>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1081 1
+<36,8,2>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1082 1
+<36,8,3>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1083 1
+<36,8,4>./Textures/Characters/¡È√Œ_≥»_‘Á√Á.png
+1084 1
