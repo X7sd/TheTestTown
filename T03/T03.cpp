@@ -40,17 +40,16 @@ struct Entity
 	PixelWorldEngine::Animation* anime;
 };
 
-//int mapM = 500, mapN = 500;
 int vN = 10, vM = 6;
 float size = 64;
 
 int startM, startX, startY, startFW;
+bool inScript;
 std::vector<MapInfo*> mapinfo;
 std::vector<Entity*> object;
 PixelWorldEngine::Application app = PixelWorldEngine::Application("The Town");
 PixelWorldEngine::DataManager data = PixelWorldEngine::DataManager(&app);
 PixelWorldEngine::PixelWorld print = PixelWorldEngine::PixelWorld("Print", &app);
-//PixelWorldEngine::WorldMap map = PixelWorldEngine::WorldMap("Map", mapM, mapN);
 PixelWorldEngine::Camera cam = PixelWorldEngine::Camera(PixelWorldEngine::RectangleF(0, 0, vN*size, vM*size));
 PixelWorldEngine::Graphics::Texture2D* tt;
 std::vector<PixelWorldEngine::Graphics::Texture2D*> textures;
@@ -91,17 +90,20 @@ void UnloadMap(int nowmap)
 
 void LoadMap(int nowmap)
 {
+	object[nowchara]->entity->SetDepthLayer(3);
 	print.SetWorldMap(mapinfo[nowmap]->map);
 	for (int i = 0; i < mapinfo[nowmap]->NPCSet.size(); i++)
 	{
 		object[mapinfo[nowmap]->NPCSet[i]->id]->entity->SetPosition(mapinfo[nowmap]->NPCSet[i]->y*size - size / 2, mapinfo[nowmap]->NPCSet[i]->x*size - size / 2);
 		object[mapinfo[nowmap]->NPCSet[i]->id]->fw = mapinfo[nowmap]->NPCSet[i]->fw;
 		object[mapinfo[nowmap]->NPCSet[i]->id]->entity->SetRenderObjectID(object[mapinfo[nowmap]->NPCSet[i]->id]->rid[mapinfo[nowmap]->NPCSet[i]->fw][0]);
+		object[mapinfo[nowmap]->NPCSet[i]->id]->entity->SetDepthLayer(2);
 		print.RegisterPixelObject(object[mapinfo[nowmap]->NPCSet[i]->id]->entity);
 	}
 }
 
-void SetRenderObjectID(void* Which, void* Data) {
+void SetRenderObjectID(void* Which, void* Data)
+{
 	auto which = (PixelWorldEngine::PixelObject*)Which;
 	auto data = *(int*)Data;
 
@@ -115,8 +117,8 @@ bool StopWalking(int tch)
 		return true;
 	}
 	animator.Stop();
+	app.UnRegisterAnimator(&animator);
 	object[tch]->anifw = 0;
-	delete object[tch]->anime;
 	return false;
 }
 
@@ -133,17 +135,8 @@ bool Walking(int tch)
 			StopWalking(tch);
 		}
 	}
-/**	if (object[tch]->step == 3)
-	{
-		object[tch]->step = 0;
-	}
-	else
-	{
-		object[tch]->step++;
-	}
-	object[tch]->entity->SetRenderObjectID(object[tch]->rid[object[tch]->fw][object[tch]->step]);*/
 	object[tch]->anifw = object[tch]->fw;
-	object[tch]->anime = new PixelWorldEngine::Animation("Walk" + object[tch]->entity->GetName());
+//	object[tch]->anime = new PixelWorldEngine::Animation("Walk" + object[tch]->entity->GetName());
 	object[tch]->anime->SetKeyFrame(object[tch]->rid[object[tch]->fw][1], 0);
 	object[tch]->anime->SetKeyFrame(object[tch]->rid[object[tch]->fw][2], 0.2);
 	object[tch]->anime->SetKeyFrame(object[tch]->rid[object[tch]->fw][3], 0.4);
@@ -151,8 +144,11 @@ bool Walking(int tch)
 	object[tch]->anime->SetKeyFrame(object[tch]->rid[object[tch]->fw][1], 0.8);
 	object[tch]->anime->Sort();
 	animator.AddAnimation(object[tch]->entity, SetRenderObjectID, object[tch]->anime, 0);
+//	animator.EnableRepeat(true);
+	app.RegisterAnimator(&animator);
 	animator.EnableRepeat(true);
 	animator.Run();
+	std::cout << "Animation Run at " << object[tch]->anifw << " direction.Key Frames registerd sign " << object[tch]->anime->GetEndTime() << "s." << std::endl;
 	return false;
 }
 
@@ -240,6 +236,29 @@ void OnUpdate(void* sender)
 		}
 	}
 
+	if ((PixelWorldEngine::Input::GetKeyCodeDown(PixelWorldEngine::KeyCode::Q)) && (!inScript))
+	{
+		for (int i = 0; i < mapinfo[nowmap]->NPCSet.size(); i++)
+		{
+			if (distance(object[nowchara]->entity->GetPositionX(), object[nowchara]->entity->GetPositionY(), (mapinfo[nowmap]->NPCSet[i]->y - 1)*size + size / 2, (mapinfo[nowmap]->NPCSet[i]->x - 1)*size + size / 2) < size / 2)
+			{
+				std::cout << "NPC #" << mapinfo[nowmap]->NPCSet[i]->id << " script activates." << std::endl;
+				inScript = true;
+			}
+		}
+	}
+	if ((PixelWorldEngine::Input::GetKeyCodeUp(PixelWorldEngine::KeyCode::Q)) && (inScript))
+	{
+		inScript = false;
+	}
+
+	if (PixelWorldEngine::Input::GetKeyCodeDown(PixelWorldEngine::KeyCode::P))
+	{
+		std::cout << object[nowchara]->entity->GetPositionX() << "," << object[nowchara]->entity->GetPositionY() << std::endl;
+		std::cout << mapinfo[nowmap]->map->GetMapData((object[nowchara]->entity->GetPositionX() - size / 2) / size, (object[nowchara]->entity->GetPositionY() - size / 2) / size)->MoveEnable << std::endl;
+		std::cout << mapinfo[nowmap]->map->GetWorldMapData((object[nowchara]->entity->GetPositionX() - size / 2) / size, (object[nowchara]->entity->GetPositionY() - size / 2) / size)->MoveEnable << std::endl;
+	}
+
 	if (isKeyDown == true)
 	{
 		object[nowchara]->fw = tfw;
@@ -249,9 +268,9 @@ void OnUpdate(void* sender)
 		cam.SetFocus(object[nowchara]->entity->GetPositionX(), object[nowchara]->entity->GetPositionY(), PixelWorldEngine::RectangleF(vN*size/2, vM*size/2, vN*size / 2, vM*size / 2));
 		for (int i = 0; i < mapinfo[nowmap]->DoorSet.size(); i++)
 		{
-			if (distance(object[nowchara]->entity->GetPositionX(), object[nowchara]->entity->GetPositionY(), mapinfo[nowmap]->DoorSet[i]->x*size + size / 2, mapinfo[nowmap]->DoorSet[i]->y*size + size / 2) < size)
+			if (distance(object[nowchara]->entity->GetPositionX(), object[nowchara]->entity->GetPositionY(), mapinfo[nowmap]->DoorSet[i]->y*size + size / 2, mapinfo[nowmap]->DoorSet[i]->x*size + size / 2) < size / 2)
 			{
-				object[nowchara]->entity->SetPosition(mapinfo[nowmap]->DoorSet[i]->tx*size + size / 2, mapinfo[nowmap]->DoorSet[i]->ty*size + size / 2);
+				object[nowchara]->entity->SetPosition(mapinfo[nowmap]->DoorSet[i]->ty*size + size / 2, mapinfo[nowmap]->DoorSet[i]->tx*size + size / 2);
 				UnloadMap(nowmap);
 				nowmap = mapinfo[nowmap]->DoorSet[i]->tm;
 				LoadMap(nowmap);
@@ -261,6 +280,7 @@ void OnUpdate(void* sender)
 	else
 	{
 		StopWalking(nowchara);
+		object[nowchara]->entity->SetRenderObjectID(object[nowchara]->rid[object[nowchara]->fw][0]);
 	}
 }
 
@@ -277,12 +297,12 @@ void ReadMap()
 		std::ifstream mapin(ts);
 		mapin >> ts;
 		int maxn, maxm;
-		mapin >> maxn >> maxm;
+		mapin >> maxm >> maxn;
 		mapinfo[i]->map=new PixelWorldEngine::WorldMap(ts, maxn, maxm);
 		mapinfo[i]->map->SetMapBlockSize(size);
-		for (int y = 0; y < maxn; y++)
+		for (int y = 0; y < maxm; y++)
 		{
-			for (int x = 0; x < maxm; x++)
+			for (int x = 0; x < maxn; x++)
 			{
 				int t;
 				mapin >> t;
@@ -304,12 +324,13 @@ void ReadMap()
 		mapin >> n1;
 		for (int p = 0; p < n1; p++)
 		{
-			int id, x, y;
-			mapin >> id >> x >> y;
+			int id, x, y, fw;
+			mapin >> id >> x >> y >> fw;
 			mapinfo[i]->NPCSet.push_back(new MapNPC);
 			mapinfo[i]->NPCSet[p]->id = id;
 			mapinfo[i]->NPCSet[p]->x = x;
 			mapinfo[i]->NPCSet[p]->y = y;
+			mapinfo[i]->NPCSet[p]->fw = fw;
 		}
 		mapin >> n2;
 		for (int p = 0; p < n2; p++)
@@ -325,6 +346,24 @@ void ReadMap()
 		}
 		mapin.close();
 		print.RegisterWorldMap(mapinfo[i]->map);
+
+		std::cout << mapinfo[i]->map->GetMapName() << std::endl;
+		for (int y = 0; y < maxm; y++)
+		{
+			for (int x = 0; x < maxn; x++)
+			{
+				std::cout << *mapinfo[i]->map->GetMapData(x, y)->RenderObjectID << " ";
+			}
+			std::cout << std::endl;
+		}
+		for (int y = 0; y < maxm; y++)
+		{
+			for (int x = 0; x < maxn; x++)
+			{
+				std::cout << (mapinfo[i]->map->GetMapData(x, y)->MoveEnable == 1);
+			}
+			std::cout << std::endl;
+		}
 	}
 	fin.close();
 }
@@ -366,16 +405,30 @@ void ReadTexture()
 				if (dex[i] == ',')
 				{
 					int tn = 0;
-					for (int j = 0; j < tnum.length(); j++)
+					if (tnum[0] == '-')
 					{
-						tn = tn * 10 + (tnum[j] - '0');
+						for (int j = 1; j < tnum.length(); j++)
+						{
+							tn = tn * 10 + (tnum[j] - '0');
+						}
+						tn = -tn;
+					}
+					else
+					{
+						for (int j = 0; j < tnum.length(); j++)
+						{
+							tn = tn * 10 + (tnum[j] - '0');
+						}
 					}
 					d.push_back(new int(tn));
 					tnum = "";
 				}
 				else
 				{
-					tnum += dex[i];
+					if (dex[i] != ' ')
+					{
+						tnum += dex[i];
+					}
 				}
 			}
 			if (d.size() == 3)
@@ -391,6 +444,15 @@ void ReadTexture()
 					tt = data.RegisterTexture(path);
 					textures.push_back(new PixelWorldEngine::Graphics::Texture2D(tt, PixelWorldEngine::Rectangle(*d[1], *d[0], *d[3], *d[2])));
 					print.RegisterRenderObjectID(id, textures[textures.size() - 1]);
+				}
+				else
+				{
+					if (d.size() == 5)
+					{
+						tt = data.RegisterTexture(path);
+						textures.push_back(new PixelWorldEngine::Graphics::Texture2D(tt, PixelWorldEngine::Rectangle(*d[0] * (*d[4] - 1) + *d[2], *d[0] * (*d[3] - 1) + *d[1], *d[0] * *d[4] + *d[2], *d[0] * *d[3] + *d[1])));
+						print.RegisterRenderObjectID(id, textures[textures.size() - 1]);
+					}
 				}
 			}
 		}
@@ -471,8 +533,12 @@ void ReadEntity()
 			}
 		}
 		object[i]->entity = new PixelWorldEngine::PixelObject(ts);
-		object[i]->entity->SetSize(size, size);
+		object[i]->entity->SetSize(size - 1, size - 1);
+		object[i]->anime = new PixelWorldEngine::Animation("Walk" + object[i]->entity->GetName());
+		
+	//	animator.AddAnimation(object[i]->entity, SetRenderObjectID, object[i]->anime, 0);
 	}
+	
 	fin.close();
 }
 
@@ -503,7 +569,6 @@ int main()
 	object[nowchara]->entity->SetRenderObjectID(object[nowchara]->rid[startFW][0]);
 	print.RegisterPixelObject(object[nowchara]->entity);
 	
-	app.RegisterAnimator(&animator);
 	app.KeyClick.push_back(OnKeyEvent);
 	app.Update.push_back(OnUpdate);
 
@@ -511,7 +576,8 @@ int main()
 	app.SetWorld(&print);
 	app.ShowWindow();
 
-	print.SetWorldMap(mapinfo[nowmap]->map);
+	LoadMap(nowmap);
+//	print.SetWorldMap(mapinfo[nowmap]->map);
 	cam.SetFocus(object[nowchara]->entity->GetPositionX(), object[nowchara]->entity->GetPositionY(), PixelWorldEngine::RectangleF(vN*size / 2, vM*size / 2, vN*size / 2, vM*size / 2));
 	app.RunLoop();
 }
