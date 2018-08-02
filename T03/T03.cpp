@@ -21,7 +21,7 @@ struct MapNPC
 
 struct MapDoor
 {
-	int x, y, tm, tx, ty;
+	int x, y, tm, sx, sy, tx, ty;
 };
 
 struct MapInfo
@@ -38,13 +38,14 @@ struct Entity
 	int fn;
 	int rid[9][4];
 	PixelWorldEngine::Animation* anime;
+	PixelWorldEngine::Animation* chmove;
 };
 
 int vN = 10, vM = 6;
 float size = 64;
 
 int startM, startX, startY, startFW;
-bool inScript;
+bool inScript, inAnime;
 std::vector<MapInfo*> mapinfo;
 std::vector<Entity*> object;
 PixelWorldEngine::Application app = PixelWorldEngine::Application("The Town");
@@ -53,7 +54,7 @@ PixelWorldEngine::PixelWorld print = PixelWorldEngine::PixelWorld("Print", &app)
 PixelWorldEngine::Camera cam = PixelWorldEngine::Camera(PixelWorldEngine::RectangleF(0, 0, vN*size, vM*size));
 PixelWorldEngine::Graphics::Texture2D* tt;
 std::vector<PixelWorldEngine::Graphics::Texture2D*> textures;
-PixelWorldEngine::Animator animator = PixelWorldEngine::Animator("A01");
+PixelWorldEngine::Animator animator = PixelWorldEngine::Animator("A01"), animator2 = PixelWorldEngine::Animator("A02");
 int nowmap = 0, nowchara = 0;
 int isBlank[20000];
 
@@ -144,11 +145,148 @@ bool Walking(int tch)
 	object[tch]->anime->SetKeyFrame(object[tch]->rid[object[tch]->fw][1], 0.8);
 	object[tch]->anime->Sort();
 	animator.AddAnimation(object[tch]->entity, SetRenderObjectID, object[tch]->anime, 0);
-//	animator.EnableRepeat(true);
 	app.RegisterAnimator(&animator);
 	animator.EnableRepeat(true);
 	animator.Run();
 	std::cout << "Animation Run at " << object[tch]->anifw << " direction.Key Frames registerd sign " << object[tch]->anime->GetEndTime() << "s." << std::endl;
+	return false;
+}
+
+void ObjectMove(void* Which, void* Data)
+{
+	auto which = (PixelWorldEngine::PixelObject*)Which;
+	auto data = *(glm::vec2*)Data;
+
+	which->SetPosition(data.x, data.y);
+}
+
+int Redirection(int x1, int y1, int x2, int y2)
+{
+	if (x1 == x2)
+	{
+		if (y1 < y2)
+		{
+			return 3;
+		}
+		else
+		{
+			if (y1 > y2)
+			{
+				return 1;
+			}
+		}
+	}
+	else
+	{
+		if (y1 == y2)
+		{
+			if (x1 < x2)
+			{
+				return 4;
+			}
+			else
+			{
+				if (x1 > x2)
+				{
+					return 2;
+				}
+			}
+		}
+		else
+		{
+			if (x1 < x2)
+			{
+				if (y1 < y2)
+				{
+					return 7;
+				}
+				else
+				{
+					if (y1 > y2)
+					{
+						return 8;
+					}
+				}
+			}
+			else
+			{
+				if (x1 > x2)
+				{
+					if (y1 < y2)
+					{
+						return 6;
+					}
+					else
+					{
+						if (y1 > y2)
+						{
+							return 5;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+PixelWorldEngine::KeyFrame InMovingPos(float timePos, PixelWorldEngine::KeyFrame lastFrame, PixelWorldEngine::KeyFrame nextFrame)
+{
+	glm::vec2 tmove1 = lastFrame.GetData<glm::vec2>();
+	glm::vec2 tmove2 = nextFrame.GetData<glm::vec2>();
+	glm::vec2 midpos;
+	PixelWorldEngine::KeyFrame midFrame =lastFrame;
+	midpos.x = tmove1.x + (tmove2.x - tmove1.x) * (timePos - lastFrame.GetTimePos()) / (nextFrame.GetTimePos() - lastFrame.GetTimePos());
+	midpos.y = tmove1.y + (tmove2.y - tmove1.y) * (timePos - lastFrame.GetTimePos()) / (nextFrame.GetTimePos() - lastFrame.GetTimePos());
+	midFrame.SetData(midpos);
+	midFrame.SetTimePos(timePos);
+	return midFrame;
+}
+
+bool EndEnter(int tch)
+{
+	if (!inAnime)
+	{
+		return true;
+	}
+	StopWalking(tch);
+	animator2.Stop();
+	app.UnRegisterAnimator(&animator2);
+	inAnime = false;
+	return false;
+}
+
+bool Entering(int tch, int x1, int y1, int x2, int y2)
+{
+	if (inAnime)
+	{
+		if (animator2.IsRun())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	inAnime = true;
+	object[tch]->fw = Redirection(y1, x1, y2, x2);
+	glm::vec2 tmove1, tmove2;
+	tmove1.x = y1 * size + size / 2;
+	tmove1.y = x1 * size + size / 2;
+	tmove2.x = y2 * size + size / 2;
+	tmove2.y = x2 * size + size / 2;
+	object[tch]->chmove->SetKeyFrame(tmove1, 0);
+	object[tch]->chmove->SetKeyFrame(tmove2, 3.2);
+	object[tch]->chmove->Sort();
+	object[tch]->chmove->SetFrameProcessUnit(InMovingPos);
+	
+	animator2.AddAnimation(object[tch]->entity, ObjectMove, object[tch]->chmove, 0);
+	app.RegisterAnimator(&animator2);
+	animator2.EnableRepeat(false);
+	animator2.Run();
+
+	Walking(tch);
+
 	return false;
 }
 
@@ -165,6 +303,15 @@ void OnUpdate(void* sender)
 	app->SetWindow((std::string)"Test Fps:" + IntToString(app->GetFramePerSecond()), vN * size, vM * size);
 	float speed = 100 * deltaTime;
 	bool isKeyDown = false;
+
+	if (inAnime)
+	{
+		if (!animator2.IsRun())
+		{
+			EndEnter(nowchara);
+		}
+		return;
+	}
 
 	glm::vec2 transform(0, 0);
 
@@ -274,6 +421,8 @@ void OnUpdate(void* sender)
 				UnloadMap(nowmap);
 				nowmap = mapinfo[nowmap]->DoorSet[i]->tm;
 				LoadMap(nowmap);
+
+				Entering(nowchara, mapinfo[nowmap]->DoorSet[i]->sx, mapinfo[nowmap]->DoorSet[i]->sy, mapinfo[nowmap]->DoorSet[i]->tx, mapinfo[nowmap]->DoorSet[i]->ty);
 			}
 		}
 	}
@@ -335,11 +484,13 @@ void ReadMap()
 		mapin >> n2;
 		for (int p = 0; p < n2; p++)
 		{
-			int x, y, tm, tx, ty;
-			mapin >> x >> y >> tm >> tx >> ty;
+			int x, y, sx, sy, tm, tx, ty;
+			mapin >> x >> y >> tm >> sx >> sy >> tx >> ty;
 			mapinfo[i]->DoorSet.push_back(new MapDoor);
 			mapinfo[i]->DoorSet[p]->x = x;
 			mapinfo[i]->DoorSet[p]->y = y;
+			mapinfo[i]->DoorSet[p]->sx = sx;
+			mapinfo[i]->DoorSet[p]->sy = sy;
 			mapinfo[i]->DoorSet[p]->tm = tm;
 			mapinfo[i]->DoorSet[p]->tx = tx;
 			mapinfo[i]->DoorSet[p]->ty = ty;
@@ -535,6 +686,7 @@ void ReadEntity()
 		object[i]->entity = new PixelWorldEngine::PixelObject(ts);
 		object[i]->entity->SetSize(size - 1, size - 1);
 		object[i]->anime = new PixelWorldEngine::Animation("Walk" + object[i]->entity->GetName());
+		object[i]->chmove = new PixelWorldEngine::Animation("Move" + object[i]->entity->GetName());
 		
 	//	animator.AddAnimation(object[i]->entity, SetRenderObjectID, object[i]->anime, 0);
 	}
