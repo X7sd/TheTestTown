@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\Administrator\source\repos\PixelWorldEngine2\ThirdParty;C:\Users\Administrator\source\repos\PixelWorldEngine2\PixelWorldEngine;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Administrator\source\repos\PixelWorldEngine2\ThirdParty\SDL2\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Administrator\source\repos\PixelWorldEngine2\ThirdParty\freetype\include;C:\Users\Administrator\source\repos\PixelWorldEngine2\ThirdParty;C:\Users\Administrator\source\repos\PixelWorldEngine2\PixelWorldEngine;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Administrator\source\repos\PixelWorldEngine2\ThirdParty\freetype\win32;C:\Users\Administrator\source\repos\PixelWorldEngine2\ThirdParty\SDL2\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
